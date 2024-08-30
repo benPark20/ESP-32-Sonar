@@ -27,7 +27,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(ENCODER_CLK, INPUT);
   pinMode(ENCODER_DT, INPUT);
-  servo.attach(0)
+  servo.attach(0);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
@@ -46,20 +46,34 @@ void setup() {
 int lastClk = HIGH;
 
 void loop() {
+  float val;
+  int lastDistance;
   distance = sonar.ping() / 10.00;
-
+  if (distance < lastDistance - 2 || distance > lastDistance + 2){
+    display.clearDisplay();
+    display.display();
+    display.setTextSize(3);
+    display.setCursor(3, 7);
+    display.println(distance);
+    display.display();
+    lastDistance = distance;
+  }
 
 
   int newClk = digitalRead(ENCODER_CLK);
   if (newClk != lastClk) {
-      val = map(val, 0, 1023, 0, 180);     // scale it to use it with the servo (value between 0 and 180)
-      myservo.write(val);   
     lastClk = newClk;
     int dtValue = digitalRead(ENCODER_DT);
     if (newClk == LOW && dtValue == HIGH) {
+      value++;
+      value = map(value, 0, 1023, 0, 180);
+      servo.write(value);
       // turn right
     }
     if (newClk == LOW && dtValue == LOW) {
+      value--;
+      value = map(value, 0, 1023, 0, 180);
+      servo.write(value);
       //turn left
     }
   }
