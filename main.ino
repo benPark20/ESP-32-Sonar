@@ -23,6 +23,8 @@ float distance;
 #define ENCODER_DT  6
 int value;
 
+#define BUZZER_PIN 27
+
 void setup() {
   Serial.begin(115200);
   pinMode(ENCODER_CLK, INPUT);
@@ -48,15 +50,17 @@ int lastClk = HIGH;
 void loop() {
   float val;
   int lastDistance;
-  distance = sonar.ping() / 10.00;
-  if (distance < lastDistance - 2 || distance > lastDistance + 2){
+  distance = sonar.ping();
+  int distanceInt = static_cast<int>(round(distance/10));
+  if (distanceInt != lastDistance){
     display.clearDisplay();
     display.display();
     display.setTextSize(3);
     display.setCursor(3, 7);
-    display.println(distance);
+    display.print(distanceInt);
+    display.println("cm");
     display.display();
-    lastDistance = distance;
+    lastDistance = distanceInt;
   }
 
 
@@ -65,16 +69,27 @@ void loop() {
     lastClk = newClk;
     int dtValue = digitalRead(ENCODER_DT);
     if (newClk == LOW && dtValue == HIGH) {
-      value++;
-      value = map(value, 0, 1023, 0, 180);
-      servo.write(value);
-      // turn right
+      value += 15;
+      if(value > 180){
+        value = 180;
+      }
     }
     if (newClk == LOW && dtValue == LOW) {
-      value--;
-      value = map(value, 0, 1023, 0, 180);
-      servo.write(value);
-      //turn left
+      value -= 15;
+      if(value < 0){
+        value = 0;
+      }
     }
+  }
+  servo.write(value);
+
+
+  static unsigned long LastTime;
+  if (distance > 0 && distance < 50)
+  { if (millis() - LastTime < 10000) {
+      tone(BUZZER_PIN, 262, 250);
+    }
+  } else {
+    LastTime = millis();
   }
 }
